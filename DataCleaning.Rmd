@@ -1,0 +1,52 @@
+---
+title: "Data Cleaning"
+author: "Parker Barnes"
+date: "3/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "C:\\Users\\pbarnes6\\Box\\Work (Project Assistant)\\data analysis\\test")
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(xlsx)
+```
+
+```{r}
+lapply(list.files(pattern = "Chin", ignore.case = T), function (n) {file.rename(n, paste0(n, ".csv"))})
+file.rename(list.files(pattern = "Chinese*"), paste0(".csv"))
+clean_data <- function(lang, skill, levels = 1:3) {
+  
+}
+```
+
+```{r}
+get_data <- function(lang, allow_dups = F) {
+  lapply(list.files(pattern = lang, ignore.case = T), function (root) {file.rename(root, paste0(n, ".csv"))})
+  filenames <- list.files(pattern = "*.csv")
+  files <- lapply(filenames, read.csv)
+  
+  files <- bind_rows(files)
+  if (!allow_dups) {
+    data <- data[!duplicated(data[1])]
+  }
+  untmd <- aggregate(untmd[-1], untmd[1], mean, na.rm = T)[-1]
+  tmd <- aggregate(tmd[-1], tmd[1], mean, na.rm = T)[-1]
+
+  list(tmd = tmd, untmd = untmd)
+}
+```
+
+```{r}
+lapply(list.files(pattern = "chin", ignore.case = T), function (root) file.rename(root, paste0(n, ".csv")))
+files <- lapply(filenames, read.csv)
+files <- bind_rows(files)
+if (!allow_dups) {
+  data <- data[!duplicated(data[1])]
+}
+
+dat <- get_data("chin", T)
+
+```
+

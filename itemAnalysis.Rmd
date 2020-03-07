@@ -1,0 +1,135 @@
+---
+title: "ItemAnalysis"
+author: "Judy Ma"
+date: "12/2/2019"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_knit$set(root.dir = "C:\\Users\\pbarnes6\\Box\\Work (Project Assistant)\\data analysis\\data")
+
+# Enter the name of the file in parentheses
+fileName="Arabic-L-Tmd-Fxd-Sup-irt.csv"
+# Variables of this data file: student name, student email, items. 
+# Data file contains variable names and the first row is answer key.
+# Items arranged by level. Level 1 items followed by level 2 items, followed by level 3 items.
+# If a respondent has too mamy unanswered items, you may have an error "Subjects with only x number of valid responses smust be removed!"
+
+# Enter the number of items per level
+# Do not leave the lower levels blank. If you have only level 2 items, use nLevel1=
+nLevel1 = 11
+nLevel2 = 18
+nLevel3 = 11
+
+# Run all chunks before knitting.
+```
+
+```{r echo=FALSE}
+# read data
+rawData <- read.csv(paste0(fileName))
+  # score data
+  dat_1 <- rawData[2:nrow(rawData),3:ncol(rawData)] # data set contains only the data, no personal info or key
+  dat_scored <- dat_1[FALSE,]
+  for (i in 1:nrow(dat_1)) {
+    for (j in 1:ncol(dat_1)) {
+      if (is.na(dat_1[i,j])) {
+        dat_scored[i,j]=NA
+      }
+      else if (dat_1[i,j]==rawData[1,j+2]) {
+        dat_scored[i,j]=1
+      }
+      else {
+        dat_scored[i,j]=0
+      }
+    }
+  }
+```
+
+## Person Estimates
+
+```{r echo=F, message=F}
+ # install eRm package
+  if (tryCatch(require("eRm")) == FALSE){
+    install.packages("eRm")
+    library(eRm)
+  }
+  # The eRm package uses conditional maximum likelihood (CML) estimation
+  
+  # fit Rasch model. Model constraint: mean difficulty = 0
+  res_rm_1 <- RM(dat_scored)
+  
+  # Person estimates
+  pp_ml_1 <- person.parameter(res_rm_1)
+  person <- as.data.frame(pp_ml_1$theta.table) 
+  
+  # because the SE are not presented in order, the following lines will help present the result correctly
+  person[,(ncol(person)+1)] = seq.int(from = 1, to = nrow(person), by=1) # create a variable noting entry order
+  person <-  person[order(person$NAgroup),] # order rows based on missing pattern group
+  se.vector = unlist(pp_ml_1$se.theta[1])
+  for (k in 2:length(pp_ml_1$se.theta)) {
+    se.vector = append(se.vector,unlist(pp_ml_1$se.theta[k]))
+  } # if there is more than one missing pattern
+  
+  pSE <- as.data.frame(se.vector)
+  temp_1 <- cbind(person,pSE)
+  temp_2 <- temp_1[order(temp_1$V4),]
+  
+  pParam <- cbind(rawData[2:nrow(rawData),1:2],temp_2[,c(1,5)])
+  colnames(pParam) <- c("Student Name", "Student Email", 
+                        "Person Ability Estimate", "Standard Deviation")
+  if (tryCatch(require("knitr")) == FALSE){
+    install.packages("knitr")
+    library(knitr)
+  }
+  kable(pParam,row.names = F)
+```
+
+### Separation reliability
+``` {r echo=F}
+  print(SepRel(pp_ml_1)$sep.rel)
+```
+
+## Item estimates
+
+```{r echo=FALSE}
+  iFit <- itemfit(pp_ml_1)              # summary of item fit statistics
+  etas <- as.data.frame(-coef(res_rm_1))     # Item difficulty parameters
+  row.names(etas) <- colnames(dat_1)
+  iParam <- cbind(etas,iFit$i.outfitMSQ, iFit$i.infitMSQ, iFit$i.outfitZ, iFit$i.infitZ)
+  colnames(iParam) <- c("difficulty","outfitMSQ","infitMSQ","outfitZ", "infitZ")
+  kable(iParam,row.names = T)
+```
+
+## Wright Map
+```{r echo=F, message=F, results='hide',fig.keep='all'}
+  if (tryCatch(require("WrightMap")) == FALSE){
+    install.packages("WrightMap")
+    library(WrightMap)
+  }
+  #Wright Map
+  itemcolor <- matrix(nrow=ncol(dat_1),ncol = 1)
+  itemcolor[1:nLevel1,1]="black"
+  if (nLevel1<ncol(dat_1)) {
+    itemcolor[(nLevel1+1):(nLevel1+nLevel2),1]="red"
+  }
+  if ((nLevel1+nLevel2)<ncol(dat_1)) {
+    itemcolor[(nLevel1+nLevel2+1):(nLevel1+nLevel2+nLevel3),1]="blue"
+  }
+  wrightMap(pp_ml_1$theta.table$`Person Parameter`, etas,show.thr.lab = FALSE,
+            thr.sym.pch = 16,thr.sym.cex = 2, thr.sym.col.fg=itemcolor,label.items.srt=90)
+```
+
+## Distractor Analysis
+Unanswered or unadministered items are marked as "x".
+``` {r echo=F, message=F}
+  if (tryCatch(require("CTT")) == FALSE){
+    install.packages("polycor")
+    library(CTT)
+  }
+  # Distractor analysis
+  dat_1[is.na(dat_1)] <- "x" # code unanswered items to be x
+  distractorTable <- distractorAnalysis(items=dat_1[2:nrow(dat_1),], key=rawData[1,3:ncol(rawData)], 
+                     pTable = FALSE, digits=5)
+  kable(distractorTable,row.names = F)
+```
