@@ -1,0 +1,116 @@
+---
+title: "Arabic-R-Time-Analysis"
+author: "Parker Barnes"
+date: "2/24/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_knit$set(root.dir = "C:\\Users\\pbarnes6\\Box\\Work (Project Assistant)\\data analysis\\Arabic-Adpt-data\\Listening")
+library(tidyr)
+library(dplyr)
+library(stringr)
+library(xlsx)
+```
+
+```{r}
+remove_outliers <- function(x, na.rm = TRUE, ...) {
+  qnt <- quantile(x, probs=c(.25, .75), na.rm = na.rm, ...)
+  H <- 1.5 * IQR(x, na.rm = na.rm)
+  y <- x
+  y[x < (qnt[1] - H)] <- NA
+  y[x > (qnt[2] + H)] <- NA
+  y
+}
+
+```
+
+
+```{r}
+create_time_summary <- function(item_times, examples, by_level = F) {
+  output <- item_times %>% 
+  sapply(remove_outliers) %>% 
+  as.data.frame() %>% 
+  gather(item, time, 1:length(item_times)) %>%
+  drop_na() %>% 
+  mutate(level = case_when(str_detect(item, examples[1]) ~ 1,
+                           str_detect(item, examples[2]) ~ 2, 
+                           str_detect(item, examples[3]) ~ 3)) %>% 
+  {if(by_level) group_by(., level) else group_by(., item)} %>% 
+  summarise(count = length(time), min = min(time), max = max(time), avg = mean(time), std.dev = sd(time)) #%>% 
+  #arrange(desc(avg))
+}
+```
+
+```{r}
+get_data <- function() {
+  untmd_filenames <- list.files("untimed", pattern="*.csv", full.names=TRUE)
+  untmd_files <- lapply(untmd_filenames, read.csv)
+  tmd_filenames <- list.files("timed", pattern="*.csv", full.names=TRUE)
+  tmd_files <- lapply(tmd_filenames, read.csv)
+  
+  untmd <- bind_rows(untmd_files)
+  tmd <- bind_rows(tmd_files)
+  
+  untmd <- aggregate(untmd[-1], untmd[1], mean, na.rm = T)[-1]
+  tmd <- aggregate(tmd[-1], tmd[1], mean, na.rm = T)[-1]
+
+  list(tmd = tmd, untmd = untmd)
+}
+```
+
+```{r}
+get_summaries <- function(data, lang, skill, levels) {
+  examples <- str_c(lang, ".", skill, ".", levels)
+  untmd_summary <- create_time_summary(data$untmd, examples)
+  tmd_summary <- create_time_summary(data$tmd, examples)
+  untmd_level_summary <- create_time_summary(data$untmd, examples, by_level = T)
+  tmd_level_summary <- create_time_summary(data$tmd, examples, by_level = T)
+  
+  list(untmd_summary, tmd_summary, untmd_level_summary, tmd_level_summary)
+}
+```
+
+```{r}
+output_analysis <- function(summaries, file_name = "analyses.xlsx") {
+  write.xlsx(summaries[1], file_name, sheetName = "untmd_summary", row.names = F)
+  write.xlsx(summaries[2], file_name, sheetName = "tmd_summary", append = T, row.names = F)
+  write.xlsx(summaries[3], file_name, sheetName = "untmd_level_summary", append = T, row.names = F)
+  write.xlsx(summaries[4], file_name, sheetName = "tmd_level_summary", append = T, row.names = F)
+}
+```
+
+```{r}
+time_analysis <- function(lang, skill, levels = 1:3) {
+  data <- get_data()
+  summaries <- get_summaries(data, lang, skill, levels)
+  output_analysis(summaries)
+}
+time_analysis("arab", "l")
+```
+
+
+```{r}
+c1 <- read.csv("timed\\Chinese-Reading-Tmd-Adpt-Sup.csv")
+c2 <- read.csv("timed\\Chinese-R-Tmd-Adpt-Sup.csv")
+c3 <- bind_rows(c1, c2)
+c3 <- aggregate(c3[-1], c3[1], mean, na.rm = TRUE)[-1]
+ca <- as.data.frame(sapply(c1[-1], remove_outliers))
+col <- remove_outliers(c3$chin.r.1.1001)
+max(col, na.rm = T)
+hist(col)
+mean(col, na.rm = T)
+hist(c3$chin.r.1.1001)
+hist(ca$chin.r.1.1001)
+mean(c3$chin.r.1.1001, na.rm = T)
+max(ca$chin.r.1.1001, na.rm = T)
+c1 %>% 
+  gather(item, time, 1:length(c1))
+```
+
+
+
+
+
+
+
