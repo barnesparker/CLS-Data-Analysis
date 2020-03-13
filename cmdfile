@@ -1,0 +1,27 @@
+&INST
+title=R2Winsteps Example
+data=C:\Users\pbarnes6\AppData\Local\Temp\RtmpGYcWpR\file2b5469a9d74
+item1=1
+ni=15
+name1=16
+namelen=5
+csv=y
+hlines=Y
+codes= 01
+&END
+i1
+i2
+i3
+i4
+i5
+i6
+i7
+i8
+i9
+i10
+i11
+i12
+i13
+i14
+i15
+END LABELS

@@ -1,0 +1,74 @@
+TABLE 0.1 R2Winsteps Example                          outfile  Mar 13 2020 13:48
+INPUT: 100 PERSON  15 ITEM  REPORTED: 100 PERSON  15 ITEM  2 CATS WINSTEPS 4.4.6
+--------------------------------------------------------------------------------
+ 
+------------------------------------------------------------------------------
+|                                                                            |
+|                     * * * *  W I N S T E P S  * * * *                      |
+|                     ---------------------------------                      |
+|                                                                            |
+|                 -  RASCH ANALYSIS FOR TWO-FACET MODELS  -                  |
+|                                                                            |
+|       PERSON, ITEM & RESPONSE STRUCTURE MEASUREMENT AND FIT ANALYSIS       |
+|                                                                            |
+|                     WINSTEPS(R)      www.winsteps.com                      |
+|                                                                            |
+|               COPYRIGHT  (C)JOHN MICHAEL LINACRE, 1991-2019                |
+|                      Permission to copy is granted.                        |
+|                    October 16, 2019   VERSION 4.4.6                        |
+------------------------------------------------------------------------------
+      TITLE= R2Winsteps Example
+CONTROL FILE: C:\Users\pbarnes6\Documents\GitHub\CLS-Data-Analysis\cmdfile
+OUTPUT FILE: C:\Users\pbarnes6\Documents\GitHub\CLS-Data-Analysis\outfile
+       DATE: Mar 13 2020 13:48
+100 PERSON Records Input
+ 
+ 
+TABLE 0.2 R2Winsteps Example                          outfile  Mar 13 2020 13:48
+INPUT: 100 PERSON  15 ITEM  REPORTED: 100 PERSON  15 ITEM  2 CATS WINSTEPS 4.4.6
+--------------------------------------------------------------------------------
+ 
+ 
+ 
+                            CONVERGENCE TABLE
+ 
+------------------------------------------------------------------------------
+|    PROX          ACTIVE COUNT       EXTREME 5 RANGE      MAX LOGIT CHANGE  |
+| ITERATION  PERSON    ITEM  CATS     PERSON    ITEM      MEASURES  STRUCTURE|
+|----------------------------------------------------------------------------|
+|        1      100      15     2       3.41    3.53        2.6391           |
+|        2      100      15     2       4.72    3.95        1.1188           |
+|        3      100      15     2       5.00    4.30         .2580           |
+|----------------------------------------------------------------------------|
+|    JMLE     MAX SCORE   MAX LOGIT     LEAST CONVERGED    CATEGORY STRUCTURE|
+| ITERATION   RESIDUAL*     CHANGE  PERSON    ITEM    CAT   RESIDUAL   CHANGE|
+|----------------------------------------------------------------------------|
+|       1         2.25       .2221      13      9*                           |
+|       2        -1.02       .0702      13     14*                           |
+|       3         -.50       .0447      13     13*                           |
+|       4          .33       .0344      13      7*                           |
+|       5          .23       .0247      86      7*                           |
+|       6          .16       .0172      86      7*                           |
+|       7          .11       .0118      86      7*                           |
+|       8          .07       .0080      86      7*                           |
+------------------------------------------------------------------------------
+Time for estimation: 0:0:0.29
+ 
+TABLE 0.3 R2Winsteps Example                          outfile  Mar 13 2020 13:48
+INPUT: 100 PERSON  15 ITEM  REPORTED: 100 PERSON  15 ITEM  2 CATS WINSTEPS 4.4.6
+--------------------------------------------------------------------------------
+ 
+&INST
+title=R2Winsteps Example
+data=C:\Users\pbarnes6\AppData\Local\Temp\RtmpGYcWpR\file2b5469a9d74
+item1=1
+ni=15
+name1=16
+namelen=5
+csv=y
+hlines=Y
+codes= 01
+&END
+BATCH=YES
+PFILE=pfile
+IFILE=ifile
