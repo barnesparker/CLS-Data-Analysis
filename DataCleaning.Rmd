@@ -6,16 +6,17 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_knit$set(root.dir = "C:\\Users\\pbarnes6\\Box\\Work (Project Assistant)\\data analysis\\test")
+knitr::opts_knit$set(root.dir = "C:\\Users\\Parker\\Box\\Work (Project Assistant)\\data analysis\\test")
 library(tidyr)
 library(dplyr)
 library(stringr)
 library(xlsx)
 library(Rwinsteps)
+library(readr)
 ```
 
 ```{r}
-# options for remove_dups:
+# options for remove_dups (can be abbreivated):
   # "all": leaves only unique rows. all duplicates including their originals are removed
   # "some": removes duplicates but keeps originals. Let's R decide which ones to keep
   # "none": keeps everything
@@ -31,7 +32,7 @@ get_data <- function(lang, skill, remove_dups = "some") {
   bind_rows()
 
   if(remove_dups %in% c("some", "s")) 
-    data <- distinct(data, data[1]) 
+    data <- distinct(data) 
   else if(remove_dups %in% c("all", "a")) {
     dups <- data[duplicated(data[1]),]
     data <- data[!which(data$Student_Name %in% dups)] 
@@ -45,29 +46,79 @@ data <- get_data(lang, skill, "s")
 ```
 
 ```{r}
-# Simulate data, with missings
+score_data <- function(data) {
+  key <- data[1,4:ncol(data)]
+  dat_1 <- as.data.frame(t(apply(data[2:nrow(data), 4:ncol(data)], 1, function(x) as.numeric(x == key))))
+  colnames(dat_1) <- as.numeric(gsub("\\D", "", colnames(data[-c(1,2,3)])))
+  dat_1$name <- data$Student_Name[-1]
+  dat_1
+}
+dat_1 <- score_data(data)
+```
+
+```{r}
+rasch_analysis <- function(dat_1) {
+  tempdat <- tempfile()
+  cmd <- wcmd(title = paste0(lang, skill, Sys.Date()), data = dat_1, item1 = 1, ni = length(dat_1), name1 = length(dat_1), max(sapply(dat_1$name, nchar)), labels = colnames(dat_1[-length(dat_1)]))
+  winsteps(cmd, windir = "C:\\Winsteps\\winsteps")
+}
+rasch_analysis(dat_1)
+```
+
+
+
+```{r}
+# Simulate scores for 15 items and 100 people
 set.seed(82911)
 b <- seq(-3, 3, length = 15)
 theta <- rnorm(100, 1)
-rmat <- ifelse(rirf(b, theta)$p > runif(1500), 1, 0)
-rmat[sample(1500, 30)] <- NA
-rmat <- data.frame(rmat)
+rmat <- data.frame(ifelse(rirf(b, theta)$p > runif(1500), 1, 0))
+
 # Item and person labels
 colnames(rmat) <- paste("i", 1:15, sep = "")
 rmat$name <- paste("p", 1:100, sep = "")
-rmat <- rmat[, c(16, 1:15)]
-# Create command file
-tempdat <- tempfile()
-cmd <- wcmd(title = "R2Winsteps Example", data = tempdat,
+
+# Create a command file object
+cmd <- wcmd(title = "R2Winsteps Example", data = "example.dat",
+  item1 = 1, ni = 15, name1 = 16, namelen = 5,
+  labels = paste("i", 1:15, sep = ""), hlines = "Y")
+
+# The last two steps require access to a local directory and
+# are not run
+
+# Write the data to file
+write.wdat(rmat, cmd)
+
+# Run Winsteps, with default filenames, not saving the
+# command file or other output to file
+out <- winsteps(cmd, windir = "C:\\Winsteps\\winsteps")
+```
+
+```{r}
+# Simulate scores for 15 items and 100 people
+set.seed(82911)
+b <- seq(-3, 3, length = 15)
+theta <- rnorm(100, 1)
+rmat <- data.frame(ifelse(rirf(b, theta)$p > runif(1500), 1, 0))
+# Item and person labels
+colnames(rmat) <- paste("i", 1:15, sep = "")
+rmat$name <- paste("p", 1:100, sep = "")
+# Create a command file object
+cmd <- wcmd(title = "R2Winsteps Example", data = "example.dat",
 item1 = 1, ni = 15, name1 = 16, namelen = 5,
 labels = paste("i", 1:15, sep = ""), hlines = "Y")
-# Write to temp file and read back in
-write.wdat(rmat, cmd, na = "N")
-
+# The last two steps require access to a local directory and
+# are not run
+# Write the data to file
+write.wdat(rmat, cmd)
+# Run Winsteps, with default filenames, not saving the
+# command file or other output to file
+imeasure <- rnorm(5)
+ifile(imeasure, name = paste("item", 1:5, sep = ""))
 
 winsteps(cmd, windir = "C:\\Winsteps\\winsteps.exe")
-# as.winsteps(cmd, ifile, pfile, daterun, comptime)
 ```
+
 
 
 ```{r}
